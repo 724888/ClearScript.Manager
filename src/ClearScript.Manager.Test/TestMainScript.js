@@ -1,1 +1,0 @@
-﻿subject.Count = 10; subject.TestString = 'test string1';
