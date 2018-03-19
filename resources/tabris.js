@@ -270,6 +270,16 @@
                     "headers": {
                         "!type": "properties",
                         "!doc": "The request headers(key-value)."
+                    },
+                    "cookieContainer": {
+                        "!type": "properties",
+                        "!doc": "The request cookieContainer"
+                    }
+                },
+                "VIEWProperties": {
+                    "url": {
+                        "!type": "string",
+                        "!doc": "The request url."
                     }
                 }
             },
@@ -277,6 +287,41 @@
 
             },
             "!types": {
+                "VIEW": {
+                    "!type": "fn()",
+                    "!url": "",
+                    "!doc": "VIEW Function .",
+                    "prototype": {
+                        "show": {
+                            "!type": "fn(listener: fn()) -> ?",
+                            "!doc": "create and show webview "
+                        },
+                        "on": {
+                            "!type": "fn(name: string, listener: fn()) -> ?",
+                            "!doc": "add callback event"
+                        },
+                        "getInitCookieString": {
+                            "!type": "fn() -> string",
+                            "!doc": "get the first initialized CookieString"
+                        },
+                        "getInitCookieContainer": {
+                            "!type": "fn() -> ?",
+                            "!doc": "get the first initialized CookieContainer"
+                        },
+                        "execJs": {
+                            "!type": "fn(js: string) -> +AwaitString",
+                            "!doc": "Execute js in the webview"
+                        },
+                        "getDomHtml": {
+                            "!type": "fn() -> +AwaitString",
+                            "!doc": "get all domString of the current webview"
+                        },
+                        "createTimer": {
+                            "!type": "fn(interval: number) -> +Timer",
+                            "!doc": "create a timer,inerval (millisecond)."
+                        }
+                    }
+                },
                 "SQL": {
                     "!type": "fn()",
                     "!url": "",
