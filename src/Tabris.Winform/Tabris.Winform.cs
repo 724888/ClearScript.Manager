@@ -153,21 +153,16 @@ namespace Tabris.Winform
                 Url = this.tabrisUrl,
                 Dock = DockStyle.Fill,
                 BackColor = System.Drawing.Color.White,
-                Visible = false
-            };
-            var DebuggerBrower = new DuiMiniBlink()
-            {
-                Dock = DockStyle.Fill,
-                BackColor = System.Drawing.Color.White,
+                ContextMenuStrip = this.codemirrowMenu,
                 Visible = true
             };
+           
             db.DUIControls.Add(brower);
-            db.DUIControls.Add(DebuggerBrower);
             //db.Controls.Add(brower);
 
 
             LogPannel logPannel = new LogPannel();
-            ButtonPannel buttonPannel = new ButtonPannel(brower,DebuggerBrower,this.DebuggerPort, logPannel.Log, logPannel.LogClear, addPanel)
+            ButtonPannel buttonPannel = new ButtonPannel(brower,this.DebuggerPort, logPannel.Log, logPannel.LogClear, addPanel)
             {
                 Index = index,
                 OnTitleChange = s =>
@@ -327,6 +322,83 @@ namespace Tabris.Winform
                 MessageBox.Show("kill debugger error,please try close inspector process in Task Manager!", "Error");
             }
         }
+
+        private void 复制ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GetSelectedTabrisControlContainer()?.ButtonPannel.PasteToclipboard();
+        }
+
+        private void 粘贴ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GetSelectedTabrisControlContainer()?.ButtonPannel.CopyFromclipboard();
+        }
+
+        private void 删除ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GetSelectedTabrisControlContainer()?.ButtonPannel.DeleteSeletectd();
+        }
+
+        private void 格式化ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GetSelectedTabrisControlContainer()?.ButtonPannel.FormatSeletectd();
+        }
+
+        private void 注释ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GetSelectedTabrisControlContainer()?.ButtonPannel.Annotation(true);
+        }
+
+        private void 反注释ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GetSelectedTabrisControlContainer()?.ButtonPannel.Annotation(false);
+        }
+
+        private void 提示ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GetSelectedTabrisControlContainer()?.ButtonPannel.Tip();
+        }
+
+        private void 打开DevToolsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GetSelectedTabrisControlContainer()?.ButtonPannel.ShowDevTools();
+        }
+        private void debuggerF5ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GetSelectedTabrisControlContainer()?.ButtonPannel.DebugEx();
+        }
+
+        private void 清除LOGToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GetSelectedTabrisControlContainer()?.ButtonPannel.ClearLog();
+        }
+
+        private void codemirrowMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            var seleted = GetSelectedTabrisControlContainer();
+            if (seleted == null)
+            {
+                return;
+            }
+
+            if (seleted.ButtonPannel.HaveSelected())
+            {
+                复制ToolStripMenuItem.Text = "复制";
+                删除ToolStripMenuItem.Visible = true;
+                格式化ToolStripMenuItem.Visible = true;
+            }
+            else
+            {
+                复制ToolStripMenuItem.Text = "复制全部";
+                删除ToolStripMenuItem.Visible = false;
+                格式化ToolStripMenuItem.Visible = false;
+            }
+
+            if (string.IsNullOrEmpty(Clipboard.GetText()))
+            {
+                粘贴ToolStripMenuItem.Enabled = false;
+            }
+        }
+
     }
 
 }

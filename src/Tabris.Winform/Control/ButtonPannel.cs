@@ -41,7 +41,7 @@ namespace Tabris.Winform.Control
         private DSkin.Controls.DSkinPanel bottomPannel = new DSkin.Controls.DSkinPanel();
         private DSkin.Controls.DSkinButton SaveButton = new DSkin.Controls.DSkinButton();
         private readonly DuiMiniBlink codemirrow;
-        private readonly DuiMiniBlink debuggerBrower;
+
         private RuntimeManager manager;
         private readonly Action<LogLevel, string, string> logAction;
 
@@ -57,14 +57,13 @@ namespace Tabris.Winform.Control
         public Action<string> OnTitleChange { get; set; }
         public Action OnModify { get; set; }
         public readonly Action ClearLog;
-        public ButtonPannel(DuiMiniBlink brower, DuiMiniBlink _debuggerBrower, int DebuggerPort ,Action<LogLevel, string, string> logAction, Action clearLog,Action<DuiMiniBlink, Action> AddChrome)
+        public ButtonPannel(DuiMiniBlink brower, int DebuggerPort ,Action<LogLevel, string, string> logAction, Action clearLog,Action<DuiMiniBlink, Action> AddChrome)
         {
             this.logAction = logAction;
             this.ClearLog = clearLog;
             init();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TabrisWinform));
             this.codemirrow = brower;
-            this.debuggerBrower = _debuggerBrower;
             debuggerPort = DebuggerPort;
             //this.codemirrow.AllowDrop = true;
             //this.codemirrow.MenuHandler = new JSFunc(this);
@@ -109,23 +108,12 @@ namespace Tabris.Winform.Control
             //        _setting.V8DebugPort, TargetId);
 
             Debug.WriteLine("V8DebugPort:" + _setting.V8DebugPort);
-            debuggerBrower.Url = "http://127.0.0.1:" + debuggerPort + "/debug?port=" + _setting.V8DebugPort;
+            debuggerUrl = "http://127.0.0.1:" + debuggerPort + "/debug?port=" + _setting.V8DebugPort;
             //debuggerBrower.DocumentReady += DebuggerBrowerOnDocumentReady;
 
-            this.codemirrow.Visible = true;
-            debuggerBrower.Visible = false;
         }
 
-        private bool isDebuggerInit;
-        private void DebuggerBrowerOnDocumentReady(object sender, DuiMiniBlink.DocumentReadyEventArgs documentReadyEventArgs)
-        {
-            if (!isDebuggerInit)
-            {
-                isDebuggerInit = true;
-                OnDebuggingInit();
-            }
-        }
-
+       
        
        
 
@@ -158,24 +146,9 @@ namespace Tabris.Winform.Control
 
         private void OnDebugging(bool flag = false)
         {
-            if (debuggerBrower == null) return;
-            this.BeginInvoke(new EventHandler(delegate
-            {
-                
-                this.codemirrow.Visible = flag;
-                debuggerBrower.Visible = !flag;
-            }));
+            
         }
-        private void OnDebuggingInit()
-        {
-            if (debuggerBrower == null) return;
-            this.BeginInvoke(new EventHandler(delegate
-            {
-
-                this.codemirrow.Visible = true;
-                debuggerBrower.Visible = false;
-            }));
-        }
+       
 
        
 
@@ -328,13 +301,65 @@ namespace Tabris.Winform.Control
             }));
 
         }
+        [JSFunction]
+        public void Excute(string code)
+        {
+            lock (this)
+            {
+                if (isRun)
+                {
+                    logAction(LogLevel.WARN, "请等待当前任务执行完", "");
+                    return;
+                }
+
+                btnExcutor_Click(code, null);
+            }
+
+        }
+
+        public void DebugEx()
+        {
+            btnExcutor_Click(null, new DebuggeEventArgs(true));
+        }
+
+        [JSFunction]
+        public void DebuggerExcute(string code)
+        {
+            lock (this)
+            {
+                if (isRun)
+                {
+                    logAction(LogLevel.WARN, "请等待当前任务执行完", "");
+                    return;
+                }
+
+                btnExcutor_Click(code, new DebuggeEventArgs(true)
+                {
+                    IsMenuDebugger = true
+                });
+            }
+        }
+        [JSFunction]
+        public void ExcuteSelected(string code)
+        {
+            lock (this)
+            {
+                if (isRun)
+                {
+                    logAction(LogLevel.WARN, "请等待当前任务执行完", "");
+                    return;
+                }
+                btExcutorSelected_Click(code, null);
+            }
+
+        }
         /// <summary>
         /// 从粘贴板粘贴内容到编辑器
         /// </summary>
         [JSFunction]
         public void PasteToclipboard()
         {
-            var selectedCode = InvokeJS("getPasteCode()");
+            var selectedCode = InvokeJS("return getPasteCode()");
             if (!string.IsNullOrEmpty(selectedCode))
             {
                 this.BeginInvoke(new EventHandler(delegate
@@ -384,6 +409,11 @@ namespace Tabris.Winform.Control
             InvokeJS("CodeMirror.showHint(cmEditor.editor, CodeMirror.ternHint, { async: !0 })");
         }
 
+        public void ShowDevTools()
+        {
+           this.codemirrow.ShowDevTools();
+        }
+       
         /// <summary>
         /// 是否存在有选中
         /// </summary>
@@ -391,7 +421,7 @@ namespace Tabris.Winform.Control
         [JSFunction]
         public bool HaveSelected()
         {
-            var selectedCode = InvokeJS("getSelectedCode()");
+            var selectedCode = InvokeJS("return getSelectedCode()");
             return !string.IsNullOrEmpty(selectedCode);
         }
 
@@ -640,11 +670,7 @@ var tabris,console;
                     {
                         if (isDebuger)
                         {
-                            this.BeginInvoke(new EventHandler(delegate
-                            {
-                                this.codemirrow.Visible = true;
-                                debuggerBrower.Visible = false;
-                            }));
+                            
                         }
 
                     }
