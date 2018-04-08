@@ -44,6 +44,8 @@ namespace Tabris.Winform.Control
 
         private RuntimeManager manager;
         private readonly Action<LogLevel, string, string> logAction;
+        private readonly Action<DuiMiniBlink, Action> addDebugChrome;
+        private readonly Action<TabrisTabItem> setTabrisTabItem;
 
         private string fileOutPath = string.Empty;
         private string debuggerUrl = string.Empty;
@@ -57,7 +59,7 @@ namespace Tabris.Winform.Control
         public Action<string> OnTitleChange { get; set; }
         public Action OnModify { get; set; }
         public readonly Action ClearLog;
-        public ButtonPannel(DuiMiniBlink brower, int DebuggerPort ,Action<LogLevel, string, string> logAction, Action clearLog,Action<DuiMiniBlink, Action> AddChrome)
+        public ButtonPannel(DuiMiniBlink brower, int DebuggerPort ,Action<LogLevel, string, string> logAction, Action clearLog,Action<DuiMiniBlink, Action> AddChrome, Action<DuiMiniBlink, Action>  AddDebugChrome,Action<TabrisTabItem> SetTabrisTabItem)
         {
             this.logAction = logAction;
             this.ClearLog = clearLog;
@@ -102,7 +104,9 @@ namespace Tabris.Winform.Control
 
             //GetDebuggerTargetId();
 
-
+            addDebugChrome = AddDebugChrome;
+            setTabrisTabItem = SetTabrisTabItem;
+            
             //debuggerUrl =string.Format(
             //        "chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=127.0.0.1:{0}/{1}",
             //        _setting.V8DebugPort, TargetId);
@@ -110,6 +114,9 @@ namespace Tabris.Winform.Control
             Debug.WriteLine("V8DebugPort:" + _setting.V8DebugPort);
             debuggerUrl = "http://127.0.0.1:" + debuggerPort + "/debug?port=" + _setting.V8DebugPort;
             //debuggerBrower.DocumentReady += DebuggerBrowerOnDocumentReady;
+
+         
+
 
         }
 
@@ -144,9 +151,28 @@ namespace Tabris.Winform.Control
             }
         }
 
-        private void OnDebugging(bool flag = false)
+        private DuiMiniBlink debugbrowser;
+
+        private void OnDebugging(Action action)
         {
-            
+            if (debugbrowser != null)
+            {
+                action();
+                if(debugbrowser.Tag!=null) setTabrisTabItem((TabrisTabItem) debugbrowser.Tag);
+                return;
+            }
+             debugbrowser = new DuiMiniBlink()
+            {
+                Url = debuggerUrl,
+                Dock = DockStyle.Fill,
+                BackColor = System.Drawing.Color.White,
+            };
+            debugbrowser.DocumentReady += (sender, args) => { action(); };
+            addDebugChrome(debugbrowser, () =>
+            {
+                debugbrowser.Dispose();
+                debugbrowser = null;
+            });
         }
        
 
@@ -196,15 +222,24 @@ namespace Tabris.Winform.Control
                     }
                     if (e != null && e is DebuggeEventArgs)
                     {
-                        this.OnDebugging();
-                        invokeJsCode(sender.ToString(), true);
+                        lock (this)
+                        {
+                            if (isRun)
+                            {
+                                logAction(LogLevel.WARN, "请等待当前任务执行完", "");
+                                return;
+                            }
+
+                            this.OnDebugging(() => { invokeJsCode(sender.ToString(), true); });
+                        }
+
                         return;
                     }
                     invokeJsCode(sender.ToString());
                     return;
                 }
                 //codemirrow.ShowDevTools();
-                var code = InvokeJS("getCode()");
+                var code = InvokeJS("return getCode()");
                 if (string.IsNullOrEmpty(code))
                 {
                     MessageBox.Show("执行内容为空");
@@ -214,10 +249,17 @@ namespace Tabris.Winform.Control
                 if (e != null && e is DebuggeEventArgs)
                 {
                     //var eventArg = (DebuggeEventArgs) e;
-                    this.OnDebugging();
-                    if (!this.isRun)
+                    lock (this)
                     {
-                        invokeJsCode(code, true);
+                        if (isRun)
+                        {
+                            logAction(LogLevel.WARN, "请等待当前任务执行完", "");
+                            return;
+                        }
+                        this.OnDebugging(() =>
+                        {
+                            invokeJsCode(code, true);
+                        });
                     }
                     return;
                 }
@@ -240,7 +282,7 @@ namespace Tabris.Winform.Control
                 return;
             }
 
-            var selectedCode = InvokeJS("getSelectedCode()").ToString();
+            var selectedCode = InvokeJS("return getSelectedCode()").ToString();
             if (string.IsNullOrEmpty(selectedCode))
             {
                 MessageBox.Show("获取选择内容为空");
@@ -495,7 +537,7 @@ namespace Tabris.Winform.Control
         {
             try
             {
-                var code = InvokeJS("getCode()");
+                var code = InvokeJS("return getCode()");
 
                 if (!string.IsNullOrEmpty(fileOutPath))
                 {
@@ -670,7 +712,7 @@ var tabris,console;
                     {
                         if (isDebuger)
                         {
-                            
+                            if(codemirrow.Tag!=null) setTabrisTabItem?.Invoke((TabrisTabItem)this.codemirrow.Tag);
                         }
 
                     }

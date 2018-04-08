@@ -75,6 +75,77 @@ namespace Tabris.Winform
             SetItemSize();
         }
 
+        public void ShowDebugView(TabrisTabItem item)
+        {
+            this.BeginInvoke(new EventHandler(delegate
+            {
+                dSkinTabBar1.SetSelect(item);
+            }));
+        }
+
+        public void addDebugPanel(DuiMiniBlink chrome, Action OnClosing)
+        {
+            this.BeginInvoke(new EventHandler(delegate
+            {
+                LogPannel logPannel = new LogPannel();
+                var selected = GetSelectedTabrisControlContainer();
+                if (selected != null)
+                {
+                    if (selected.LogPannel != null)
+                    {
+                        selected.LogPannel.OnLoging += delegate (object sender, EventArgs args)
+                        {
+                            var model = sender as LogEventModel;
+                            if (model != null)
+                            {
+                                logPannel.Log(model.LogLevel, model.Message);
+                            }
+                        };
+                    }
+                }
+                var index = dSkinTabBar1.Items.IndexOf(addButton);
+                TabrisTabItem item = new TabrisTabItem()
+                {
+                    Text = "debug " + (index + 1),
+                    Image = Properties.Resources.JSS
+                };
+                dSkinTabBar1.Items.Insert(index, item);
+                TabPage page = new TabPage();
+                item.TabPage = page;
+                dSkinTabControl1.TabPages.Add(page);
+                dSkinTabBar1.LayoutContent();
+                dSkinTabBar1.SetSelect(item);
+                chrome.Tag = item;
+                DSkin.Controls.DSkinBaseControl db = new DSkin.Controls.DSkinBaseControl { Dock = DockStyle.Fill };
+                db.DUIControls.Add(chrome);
+                page.Controls.Add(db);
+                var buttonPanel = new ChromeButtonPannel(chrome);
+                this.dSkinPanel3.Controls.Add(buttonPanel);
+                this.dSkinPanel1.Controls.Add(logPannel);
+                item.Tag = new ViewControlContainer
+                {
+                    OnClosing = delegate ()
+                    {
+                        OnClosing();
+                        if (selected != null)
+                        {
+                            selected.LogPannel.OnLoging -= delegate (object sender, EventArgs args)
+                            {
+                                var model = sender as LogEventModel;
+                                if (model != null)
+                                {
+                                    logPannel.Log(model.LogLevel, model.Message);
+                                }
+                            };
+                        }
+                    },
+                    ButtonPannel = buttonPanel,
+                    LogPannel = logPannel
+                };
+
+            }));
+
+        }
         public void addPanel(DuiMiniBlink chrome,Action OnClosing)
         {
             this.BeginInvoke(new EventHandler(delegate
@@ -108,6 +179,7 @@ namespace Tabris.Winform
                 dSkinTabBar1.LayoutContent();
                 dSkinTabBar1.SetSelect(item);
                 DSkin.Controls.DSkinBaseControl db = new DSkin.Controls.DSkinBaseControl { Dock = DockStyle.Fill };
+               
                 db.DUIControls.Add(chrome);
                 page.Controls.Add(db);
                 var buttonPanel = new ChromeButtonPannel(chrome);
@@ -156,13 +228,13 @@ namespace Tabris.Winform
                 ContextMenuStrip = this.codemirrowMenu,
                 Visible = true
             };
-           
+            brower.Tag = item;
             db.DUIControls.Add(brower);
             //db.Controls.Add(brower);
 
 
             LogPannel logPannel = new LogPannel();
-            ButtonPannel buttonPannel = new ButtonPannel(brower,this.DebuggerPort, logPannel.Log, logPannel.LogClear, addPanel)
+            ButtonPannel buttonPannel = new ButtonPannel(brower,this.DebuggerPort, logPannel.Log, logPannel.LogClear, addPanel, addDebugPanel, ShowDebugView)
             {
                 Index = index,
                 OnTitleChange = s =>
