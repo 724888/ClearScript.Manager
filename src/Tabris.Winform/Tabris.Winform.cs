@@ -121,7 +121,8 @@ namespace Tabris.Winform
                 var loading = new DuiPictureBox
                 {
                     Image = Properties.Resources.Loading2,
-                    Anchor = System.Windows.Forms.AnchorStyles.Top
+                    Anchor = System.Windows.Forms.AnchorStyles.Top,
+                    Location = new System.Drawing.Point(0, 100)
                 };
                 db.DUIControls.Add(loading);
                 chrome.DocumentReady += (sender, args) =>
@@ -248,7 +249,8 @@ namespace Tabris.Winform
             var loading = new DuiPictureBox
             {
                 Image = Properties.Resources.Loading2,
-                Anchor = System.Windows.Forms.AnchorStyles.Top
+                Anchor =System.Windows.Forms.AnchorStyles.Top,
+                Location = new System.Drawing.Point(0,100)
             };
             db.DUIControls.Add(loading);
             brower.DocumentReady += (o, args) =>

@@ -63,10 +63,10 @@ namespace Tabris.Winform.Control
             if (c != null)
             {
                 var currentIndex = c.Items.IndexOf(this);
-                if (currentIndex == 0)
-                {
-                    return;
-                }
+                //if (currentIndex == 0)
+                //{
+                //    return;
+                //}
 
                 if (c.TabControl != null)
                 {
