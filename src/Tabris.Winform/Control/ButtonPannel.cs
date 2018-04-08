@@ -57,7 +57,7 @@ namespace Tabris.Winform.Control
         public Action<string> OnTitleChange { get; set; }
         public Action OnModify { get; set; }
         public readonly Action ClearLog;
-        public ButtonPannel(DuiMiniBlink brower, DuiMiniBlink _debuggerBrower,int DebuggerPort ,Action<LogLevel, string, string> logAction, Action clearLog,Action<DuiMiniBlink, Action> AddChrome)
+        public ButtonPannel(DuiMiniBlink brower, DuiMiniBlink _debuggerBrower, int DebuggerPort ,Action<LogLevel, string, string> logAction, Action clearLog,Action<DuiMiniBlink, Action> AddChrome)
         {
             this.logAction = logAction;
             this.ClearLog = clearLog;
@@ -70,6 +70,7 @@ namespace Tabris.Winform.Control
             //this.codemirrow.MenuHandler = new JSFunc(this);
             //this.debuggerBrower.MenuHandler = new DebugJSFunc(this);
             //codemirrow.RegisterJsObject("csharpJsFunction", new JSFunc(this), new BindingOptions { CamelCaseJavascriptNames = false });
+            this.codemirrow.GlobalObject = this;
 
             this.Dock = System.Windows.Forms.DockStyle.Fill;
             RightBottom = ((System.Drawing.Image)(resources.GetObject("dSkinPanel3.RightBottom")));
@@ -176,25 +177,7 @@ namespace Tabris.Winform.Control
             }));
         }
 
-        /// <summary>
-        /// 复制选中到粘贴板
-        /// </summary>
-        public void CopyFromclipboard()
-        {
-            this.BeginInvoke(new EventHandler(delegate
-            {
-                var getClipData = Clipboard.GetText();
-                if (!string.IsNullOrEmpty(getClipData))
-                {
-                    var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(getClipData);
-                    var getClipDatabase64 = Convert.ToBase64String(plainTextBytes);
-                    InvokeJS("insertCode(\"" + getClipDatabase64 + "\")");
-                    OnModify();
-                }
-               
-            }));
-           
-        }
+       
 
         private string InvokeJS(string code)
         {
@@ -209,62 +192,7 @@ namespace Tabris.Winform.Control
                 return string.Empty;
             }
         }
-        /// <summary>
-        /// 从粘贴板粘贴内容到编辑器
-        /// </summary>
-        public void PasteToclipboard()
-        {
-            var selectedCode = InvokeJS("getPasteCode()");
-            if (!string.IsNullOrEmpty(selectedCode))
-            {
-                this.BeginInvoke(new EventHandler(delegate
-                {
-                    Clipboard.SetText(selectedCode);
-                }));
-           
-            }
-        }
-
-        /// <summary>
-        /// 删除选中
-        /// </summary>
-        public void DeleteSeletectd()
-        {
-            InvokeJS("window.cmEditor.editor.replaceSelection('')");
-            OnModify();
-        }
-
-        /// <summary>
-        /// 格式化选中
-        /// </summary>
-        public void FormatSeletectd()
-        {
-            InvokeJS("autoFormatSelection()");
-            OnModify();
-        }
-
-        /// <summary>
-        /// 注释
-        /// </summary>
-        public void Annotation(bool flag)
-        {
-            InvokeJS(flag ? "commentSelection(true)" : "commentSelection(false)");
-            OnModify();
-        }
-
-        public void Tip()
-        {
-            InvokeJS("CodeMirror.showHint(cmEditor.editor, CodeMirror.ternHint, { async: !0 })");
-        }
-        /// <summary>
-        /// 是否存在有选中
-        /// </summary>
-        /// <returns></returns>
-        public bool HaveSelected()
-        {
-            var selectedCode = InvokeJS("getSelectedCode()");
-            return !string.IsNullOrEmpty(selectedCode);
-        }
+       
 
 
         private void initEvent()
@@ -279,7 +207,7 @@ namespace Tabris.Winform.Control
 
         private void SaveButton_Click(object sender, EventArgs e)
         {
-            this.Save();
+            this.SaveToFile();
         }
 
         private void btnExcutor_Click(object sender, EventArgs e)
@@ -380,10 +308,160 @@ namespace Tabris.Winform.Control
         }
 
         #region JS Function
+        /// <summary>
+        /// 复制选中到粘贴板
+        /// </summary>
+        [JSFunction]
+        public void CopyFromclipboard()
+        {
+            this.BeginInvoke(new EventHandler(delegate
+            {
+                var getClipData = Clipboard.GetText();
+                if (!string.IsNullOrEmpty(getClipData))
+                {
+                    var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(getClipData);
+                    var getClipDatabase64 = Convert.ToBase64String(plainTextBytes);
+                    InvokeJS("insertCode(\"" + getClipDatabase64 + "\")");
+                    OnModify();
+                }
 
+            }));
 
+        }
+        /// <summary>
+        /// 从粘贴板粘贴内容到编辑器
+        /// </summary>
+        [JSFunction]
+        public void PasteToclipboard()
+        {
+            var selectedCode = InvokeJS("getPasteCode()");
+            if (!string.IsNullOrEmpty(selectedCode))
+            {
+                this.BeginInvoke(new EventHandler(delegate
+                {
+                    Clipboard.SetText(selectedCode);
+                }));
 
-        public bool Save()
+            }
+        }
+
+        /// <summary>
+        /// 删除选中
+        /// </summary>
+        [JSFunction]
+        public void DeleteSeletectd()
+        {
+            InvokeJS("window.cmEditor.editor.replaceSelection('')");
+            OnModify();
+        }
+
+        /// <summary>
+        /// 格式化选中
+        /// </summary>
+        [JSFunction]
+        public void FormatSeletectd()
+        {
+            InvokeJS("autoFormatSelection()");
+            OnModify();
+        }
+
+        /// <summary>
+        /// 注释
+        /// </summary>
+        [JSFunction]
+        public void Annotation(bool flag)
+        {
+            InvokeJS(flag ? "commentSelection(true)" : "commentSelection(false)");
+            OnModify();
+        }
+
+        /// <summary>
+        /// 代码提示
+        /// </summary>
+        [JSFunction]
+        public void Tip()
+        {
+            InvokeJS("CodeMirror.showHint(cmEditor.editor, CodeMirror.ternHint, { async: !0 })");
+        }
+
+        /// <summary>
+        /// 是否存在有选中
+        /// </summary>
+        /// <returns></returns>
+        [JSFunction]
+        public bool HaveSelected()
+        {
+            var selectedCode = InvokeJS("getSelectedCode()");
+            return !string.IsNullOrEmpty(selectedCode);
+        }
+
+        [JSFunction]
+        public void Modify()
+        {
+
+            OnModify();
+        }
+        [JSFunction]
+        public bool Save(string code)
+        {
+            try
+            {
+
+                if (!string.IsNullOrEmpty(fileOutPath))
+                {
+                    Task.Factory.StartNew(() =>
+                    {
+                        using (StreamWriter sw = new StreamWriter(fileOutPath, false))
+                        {
+                            sw.Write(code);
+                            sw.Flush();
+                        }
+
+                        logAction(LogLevel.INFO, "保存成功", "");
+                    });
+                    return true;
+                }
+                this.Invoke(new EventHandler(delegate
+                {
+                    //弹出保存框
+                    SaveFileDialog jsFile = new SaveFileDialog();
+                    jsFile.InitialDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                    jsFile.RestoreDirectory = true;
+                    jsFile.Filter = "Js文件|*.js";
+                    if (jsFile.ShowDialog() == DialogResult.OK)
+                    {
+                        using (StreamWriter sw = new StreamWriter(jsFile.FileName, false))
+                        {
+                            sw.Write(code);
+                            sw.Flush();
+                        }
+
+                        fileOutPath = jsFile.FileName;
+                        logAction(LogLevel.INFO, "保存成功", "");
+                    }
+                }));
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logAction(LogLevel.ERROR, "保存出错", ex.Message);
+                return true;
+            }
+            finally
+            {
+                if (!string.IsNullOrEmpty(fileOutPath))
+                {
+                    var fileNameExt = fileOutPath.Substring(fileOutPath.LastIndexOf("\\") + 1);
+                    if (OnTitleChange != null) OnTitleChange(fileNameExt);
+                }
+
+            }
+
+        }
+
+        
+        public bool SaveToFile()
         {
             try
             {

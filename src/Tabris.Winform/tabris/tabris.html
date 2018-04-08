@@ -31,6 +31,7 @@
         .cm-mustache {
             color: #e46d31;
         }
+       
     </style>
     <script src="resources/jquery-2.1.3.js"></script>
     <link rel="stylesheet" href="resources/codemirror/lib/codemirror.css">
@@ -130,7 +131,7 @@
                         "Ctrl-Q": function (a) { CodeMirror.tern.rename(a) },
                         "Alt-\\": function (a) { cmEditor.editor.off("cursorActivity", autoComplete);cmEditor.editor.showHint({isFunc:true}) },
                         "Ctrl-S": function (a) {
-							try{csharpJsFunction && csharpJsFunction.Save(getCode());}catch(e){}
+							try{Save(getCode());}catch(e){}
 						},
                         "Ctrl-/": function (a) {
                             commentSelection(true);
@@ -144,13 +145,13 @@
                         "F2": function (a) {
                             var sele = getSelectedCode();
                             if (sele && sele.length > 0) {
-                                try{(csharpJsFunction && csharpJsFunction.ExcuteSelected(sele));}catch(e){}
+                                try{(ExcuteSelected(sele));}catch(e){}
                             } else {
-                                try{(csharpJsFunction && csharpJsFunction.Excute(getCode()));}catch(e){}
+                                try{(Excute(getCode()));}catch(e){}
                             }
                         },
                         "F5": function (a) {
-                            try{(csharpJsFunction && csharpJsFunction.DebuggerExcute(getCode()));}catch(e){}
+                            try{(DebuggerExcute(getCode()));}catch(e){}
                         }
                     },
                     gutters: ["CodeMirror-lint-markers", "CodeMirror-foldgutter","CodeMirror-linenumbers", "breakpoints"],
@@ -168,7 +169,7 @@
 				try{
 					var info = cm.lineInfo(n);
 					if (info.handle && info.handle.text.trim().length === 0) return;
-					var breakpoint = (csharpJsFunction && csharpJsFunction.SetBreakpoint(info.line));
+					var breakpoint = (SetBreakpoint(info.line));
 					if (breakpoint != -1) {
 						cm.setGutterMarker(n, "breakpoints", info.gutterMarkers ? null : makeMarker());
 					}
@@ -226,10 +227,10 @@
                 cmEditor.editor.off("change",cmEditor.editor.tabrisOnchange);
                 //Ctrl +V
                 if (event.ctrlKey && event.keyCode == 86) {
-                    try{(csharpJsFunction && csharpJsFunction.Modify());}catch(e){}
+                    try{(Modify());}catch(e){}
                 }
                 else if (event.ctrlKey && event.keyCode == 90) { //Ctrl +Z
-                    try{(csharpJsFunction && csharpJsFunction.Modify());}catch(e){}
+                    try{(Modify());}catch(e){}
                 }
                 else if (event.ctrlKey) {
 
@@ -237,25 +238,25 @@
                     //F1-12
                 }else if (event.keyCode >= 49 && event.keyCode <= 57) {
                     //英文键盘上的数字键
-                    try{(csharpJsFunction && csharpJsFunction.Modify());}catch(e){}
+                    try{(Modify());}catch(e){}
                 }else if (event.keyCode >= 96 && event.keyCode <= 105) {
                     //小键盘的数字键
-                    try{(csharpJsFunction && csharpJsFunction.Modify());}catch(e){}
+                    try{(Modify());}catch(e){}
                 }
                 else if (event.keyCode > 32 && event.keyCode <= 40) {
                     cmEditor.editor.off("cursorActivity",autoComplete);
-                    try{(csharpJsFunction && csharpJsFunction.Modify());}catch(e){}
+                    try{(Modify());}catch(e){}
                 } else if (event.keyCode == 32) {
                     cmEditor.editor.off("cursorActivity",autoComplete);
                     //SPACE
-                    try{(csharpJsFunction && csharpJsFunction.Modify());}catch(e){}
+                    try{(Modify());}catch(e){}
                 }else if (event.keyCode == 13) {
                     cmEditor.editor.off("cursorActivity",autoComplete);
                     //Enter
-                    try{(csharpJsFunction && csharpJsFunction.Modify());}catch(e){}
+                    try{(Modify());}catch(e){}
                 } else {
                     cmEditor.editor.on("change",cmEditor.editor.tabrisOnchange);
-                    try{(csharpJsFunction && csharpJsFunction.Modify());}catch(e){}
+                    try{(Modify());}catch(e){}
                 }
             });
         });
@@ -300,11 +301,19 @@
             var range = getSelectedRange();
             window.cmEditor.editor.commentRange(isComment, range.from, range.to);
         }
+
+        window.oncontextmenu=function(e){
+//取消默认的浏览器自带右键 很重要！！
+            e.preventDefault();
+
+        }
+
     </script>
 </head>
 <body>
-    <form id="codeForm">
-        <textarea id="code" name="code"></textarea>
-    </form>
+<form id="codeForm">
+    <textarea id="code" name="code"></textarea>
+</form>
+
 </body>
 </html>
