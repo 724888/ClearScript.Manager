@@ -7,8 +7,7 @@
 //-----------------------------------------------------------------------
 
 
-using CefSharp;
-using CefSharp.WinForms;
+using DSkin.DirectUI;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -41,8 +40,8 @@ namespace Tabris.Winform.Control
         private DSkin.Controls.DSkinLabel dSkinLabel1 = new DSkin.Controls.DSkinLabel();
         private DSkin.Controls.DSkinPanel bottomPannel = new DSkin.Controls.DSkinPanel();
         private DSkin.Controls.DSkinButton SaveButton = new DSkin.Controls.DSkinButton();
-        private readonly ChromiumWebBrowser codemirrow;
-        private readonly ChromiumWebBrowser debuggerBrower;
+        private readonly DuiMiniBlink codemirrow;
+        private readonly DuiMiniBlink debuggerBrower;
         private RuntimeManager manager;
         private readonly Action<LogLevel, string, string> logAction;
 
@@ -58,7 +57,7 @@ namespace Tabris.Winform.Control
         public Action<string> OnTitleChange { get; set; }
         public Action OnModify { get; set; }
         public readonly Action ClearLog;
-        public ButtonPannel(ChromiumWebBrowser brower, ChromiumWebBrowser _debuggerBrower,int DebuggerPort ,Action<LogLevel, string, string> logAction, Action clearLog,Action<ChromiumWebBrowser,Action> AddChrome)
+        public ButtonPannel(DuiMiniBlink brower, DuiMiniBlink _debuggerBrower,int DebuggerPort ,Action<LogLevel, string, string> logAction, Action clearLog,Action<DuiMiniBlink, Action> AddChrome)
         {
             this.logAction = logAction;
             this.ClearLog = clearLog;
@@ -67,10 +66,10 @@ namespace Tabris.Winform.Control
             this.codemirrow = brower;
             this.debuggerBrower = _debuggerBrower;
             debuggerPort = DebuggerPort;
-            this.codemirrow.AllowDrop = true;
-            this.codemirrow.MenuHandler = new JSFunc(this);
-            this.debuggerBrower.MenuHandler = new DebugJSFunc(this);
-            codemirrow.RegisterJsObject("csharpJsFunction", new JSFunc(this), new BindingOptions { CamelCaseJavascriptNames = false });
+            //this.codemirrow.AllowDrop = true;
+            //this.codemirrow.MenuHandler = new JSFunc(this);
+            //this.debuggerBrower.MenuHandler = new DebugJSFunc(this);
+            //codemirrow.RegisterJsObject("csharpJsFunction", new JSFunc(this), new BindingOptions { CamelCaseJavascriptNames = false });
 
             this.Dock = System.Windows.Forms.DockStyle.Fill;
             RightBottom = ((System.Drawing.Image)(resources.GetObject("dSkinPanel3.RightBottom")));
@@ -109,13 +108,15 @@ namespace Tabris.Winform.Control
             //        _setting.V8DebugPort, TargetId);
 
             Debug.WriteLine("V8DebugPort:" + _setting.V8DebugPort);
-            debuggerBrower.Load("http://127.0.0.1:" + debuggerPort + "/debug?port=" + _setting.V8DebugPort);
-            debuggerBrower.FrameLoadEnd += DebuggerBrowserForOnFrameLoadEnd;
-         
+            debuggerBrower.Url = "http://127.0.0.1:" + debuggerPort + "/debug?port=" + _setting.V8DebugPort;
+            //debuggerBrower.DocumentReady += DebuggerBrowerOnDocumentReady;
+
+            this.codemirrow.Visible = true;
+            debuggerBrower.Visible = false;
         }
 
         private bool isDebuggerInit;
-        private void DebuggerBrowserForOnFrameLoadEnd(object sender, FrameLoadEndEventArgs e)
+        private void DebuggerBrowerOnDocumentReady(object sender, DuiMiniBlink.DocumentReadyEventArgs documentReadyEventArgs)
         {
             if (!isDebuggerInit)
             {
@@ -123,6 +124,9 @@ namespace Tabris.Winform.Control
                 OnDebuggingInit();
             }
         }
+
+       
+       
 
         private void GetDebuggerTargetId()
         {
@@ -196,8 +200,9 @@ namespace Tabris.Winform.Control
         {
             try
             {
-                JavascriptResponse task = this.codemirrow.GetMainFrame().EvaluateScriptAsync(code, null).ConfigureAwait(false).GetAwaiter().GetResult();
-                return task.Success ? (task.Result.ToString() ?? "null") : task.Message;
+                return this.codemirrow.InvokeJS(code).ToString();
+                //JavascriptResponse task = this.codemirrow.GetMainFrame().EvaluateScriptAsync(code, null).ConfigureAwait(false).GetAwaiter().GetResult();
+                //return task.Success ? (task.Result.ToString() ?? "null") : task.Message;
             }
             catch (Exception)
             {
@@ -376,309 +381,8 @@ namespace Tabris.Winform.Control
 
         #region JS Function
 
-        public class JSFunc : IContextMenuHandler
-        {
-            enum MenuItem
-            {
-                ShowDevTools = 26501,
-                CloseDevTools = 26502,
-                Copy = 26503,
-                Paste = 26504,
-                Delete = 26505,
-                Format = 26506,
-                Annotation = 26507,
-                UnAnnotation = 26508,
-                Tip = 26509,
-                ClearLog = 26510,
-            }
-
-            private readonly ButtonPannel _buttonPannel;
-            public JSFunc(ButtonPannel buttonPannel)
-            {
-                _buttonPannel = buttonPannel;
-            }
 
 
-            public void Modify()
-            {
-
-                _buttonPannel.OnModify();
-            }
-
-            #region F2
-            public void ExcuteSelected(string code)
-            {
-                lock (this)
-                {
-                    if (_buttonPannel.isRun)
-                    {
-                        _buttonPannel.logAction(LogLevel.WARN, "请等待当前任务执行完", "");
-                        return;
-                    }
-                    _buttonPannel.btExcutorSelected_Click(code, null); 
-                }
-
-            }
-            public void Excute(string code)
-            {
-                lock (this)
-                {
-                    if (_buttonPannel.isRun)
-                    {
-                        _buttonPannel.logAction(LogLevel.WARN, "请等待当前任务执行完", "");
-                        return;
-                    }
-
-                    _buttonPannel.btnExcutor_Click(code, null); 
-                }
-
-            }
-
-            public void DebuggerExcute(string code)
-            {
-                lock (this)
-                {
-                    if (_buttonPannel.isRun)
-                    {
-                        _buttonPannel.logAction(LogLevel.WARN, "请等待当前任务执行完", "");
-                        return;
-                    }
-
-                    _buttonPannel.btnExcutor_Click(code, new DebuggeEventArgs(true)
-                    {
-                        IsMenuDebugger = true
-                    });
-                }
-            }
-            #endregion
-
-            public bool Save(string code)
-            {
-                try
-                {
-
-                    if (!string.IsNullOrEmpty(_buttonPannel.fileOutPath))
-                    {
-                        Task.Factory.StartNew(() =>
-                        {
-                            using (StreamWriter sw = new StreamWriter(_buttonPannel.fileOutPath, false))
-                            {
-                                sw.Write(code);
-                                sw.Flush();
-                            }
-
-                            _buttonPannel.logAction(LogLevel.INFO, "保存成功", "");
-                        });
-                        return true;
-                    }
-                    this._buttonPannel.Invoke(new EventHandler(delegate
-                    {
-                        //弹出保存框
-                        SaveFileDialog jsFile = new SaveFileDialog();
-                        jsFile.InitialDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                        jsFile.RestoreDirectory = true;
-                        jsFile.Filter = "Js文件|*.js";
-                        if (jsFile.ShowDialog() == DialogResult.OK)
-                        {
-                            using (StreamWriter sw = new StreamWriter(jsFile.FileName, false))
-                            {
-                                sw.Write(code);
-                                sw.Flush();
-                            }
-
-                            _buttonPannel.fileOutPath = jsFile.FileName;
-                            _buttonPannel.logAction(LogLevel.INFO, "保存成功", "");
-                        }
-                    }));
-
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    _buttonPannel.logAction(LogLevel.ERROR, "保存出错", ex.Message);
-                    return true;
-                }
-                finally
-                {
-                    if (!string.IsNullOrEmpty(_buttonPannel.fileOutPath))
-                    {
-                        var fileNameExt = _buttonPannel.fileOutPath.Substring(_buttonPannel.fileOutPath.LastIndexOf("\\") + 1);
-                        if (_buttonPannel.OnTitleChange != null) _buttonPannel.OnTitleChange(fileNameExt);
-                    }
-
-                }
-
-            }
-
-            #region MenuHandler
-
-            void IContextMenuHandler.OnBeforeContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model)
-            {
-                //To disable the menu then call clear
-                model.Clear();
-
-                model.AddItem((CefMenuCommand)(int)MenuItem.Copy,          "复制    (Ctrl + C)");
-                if (!string.IsNullOrEmpty(Clipboard.GetText()))
-                {
-                    model.AddItem((CefMenuCommand)(int)MenuItem.Paste,     "粘贴    (Ctrl + V)");
-                }
-                model.AddItem((CefMenuCommand)(int)MenuItem.Delete, "删除");
-                model.AddItem((CefMenuCommand)(int)MenuItem.Format,       "格式化   (Ctrl + Alt + C)");
-                
-                model.AddItem((CefMenuCommand)(int)MenuItem.Annotation,   "注释     (Ctrl + /)");
-                model.AddItem((CefMenuCommand)(int)MenuItem.UnAnnotation, "反注释   (Ctrl +Alt + /)");
-                model.AddItem((CefMenuCommand)(int)MenuItem.Tip,          "提示     (Alt + /)");
-
-                //Removing existing menu item
-                //bool removed = model.Remove(CefMenuCommand.ViewSource); // Remove "View Source" option
-
-                //Add new custom menu items
-                model.AddItem((CefMenuCommand)(int)MenuItem.ShowDevTools, "打开 DevTools");
-                model.AddItem((CefMenuCommand)(int)MenuItem.CloseDevTools, "Debugger  (F5)");
-                model.AddItem((CefMenuCommand)(int)MenuItem.ClearLog, "清除LOG");
-                //model.AddItem((CefMenuCommand)(int)MenuItem.CloseDevTools, "关闭 DevTools");
-            }
-
-            bool IContextMenuHandler.OnContextMenuCommand(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, CefMenuCommand commandId, CefEventFlags eventFlags)
-            {
-                
-                if ((int)commandId == (int)MenuItem.ShowDevTools)
-                {
-                    browser.ShowDevTools();
-                }
-                if ((int)commandId == (int)MenuItem.CloseDevTools)
-                {
-                    //browser.CloseDevTools();
-                    new Task(() =>
-                    {
-                        _buttonPannel.btnExcutor_Click(null, new DebuggeEventArgs(true));
-                    }).Start();
-                   
-                }
-                if ((int)commandId == (int)MenuItem.Copy)
-                {
-                    new Task(() =>
-                    {
-                        _buttonPannel.PasteToclipboard();
-                    }).Start();
-                }
-
-                if ((int)commandId == (int)MenuItem.Paste)
-                {
-                    new Task(() =>
-                    {
-                        _buttonPannel.CopyFromclipboard();
-                    }).Start(); 
-                }
-
-
-                if ((int)commandId == (int)MenuItem.Delete)
-                {
-                    new Task(() =>
-                    {
-                        _buttonPannel.DeleteSeletectd();
-                    }).Start();
-                }
-
-                if ((int)commandId == (int)MenuItem.Format)
-                {
-                    new Task(() =>
-                    {
-                        _buttonPannel.FormatSeletectd();
-                    }).Start();
-                }
-
-                if ((int)commandId == (int)MenuItem.Annotation)
-                {
-                    new Task(() =>
-                    {
-                        _buttonPannel.Annotation(true);
-                    }).Start();
-                }
-
-                if ((int)commandId == (int)MenuItem.UnAnnotation)
-                {
-                    new Task(() =>
-                    {
-                        _buttonPannel.Annotation(false);
-                    }).Start();
-                }
-                if ((int)commandId == (int)MenuItem.Tip)
-                {
-                    new Task(() =>
-                    {
-                        _buttonPannel.Tip();
-                    }).Start();
-                }
-                if ((int)commandId == (int)MenuItem.ClearLog)
-                {
-                    new Task(() =>
-                    {
-                        _buttonPannel.ClearLog();
-                    }).Start();
-                }
-                return false;
-            }
-
-            void IContextMenuHandler.OnContextMenuDismissed(IWebBrowser browserControl, IBrowser browser, IFrame frame)
-            {
-
-            }
-
-            bool IContextMenuHandler.RunContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model, IRunContextMenuCallback callback)
-            {
-                return false;
-            }
-
-            #endregion
-        }
-
-
-        public class DebugJSFunc : IContextMenuHandler
-        {
-            private readonly ButtonPannel _buttonPannel;
-            public DebugJSFunc(ButtonPannel buttonPannel)
-            {
-                _buttonPannel = buttonPannel;
-            }
-            enum MenuItem
-            {
-                Hide = 16501,
-              
-            }
-            #region MenuHandler
-
-            void IContextMenuHandler.OnBeforeContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model)
-            {
-                //To disable the menu then call clear
-                model.Clear();
-
-                model.AddItem((CefMenuCommand)(int)MenuItem.Hide, "关闭DEBUG");
-               
-            }
-
-            bool IContextMenuHandler.OnContextMenuCommand(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, CefMenuCommand commandId, CefEventFlags eventFlags)
-            {
-
-                if ((int)commandId == (int)MenuItem.Hide)
-                {
-                    _buttonPannel.OnDebugging(true);
-                }
-                return false;
-            }
-
-            void IContextMenuHandler.OnContextMenuDismissed(IWebBrowser browserControl, IBrowser browser, IFrame frame)
-            {
-
-            }
-
-            bool IContextMenuHandler.RunContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model, IRunContextMenuCallback callback)
-            {
-                return false;
-            }
-
-            #endregion
-        }
         public bool Save()
         {
             try
@@ -1134,25 +838,25 @@ var tabris,console;
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            try
-            {
-                codemirrow?.CloseDevTools();
-                debuggerBrower?.CloseDevTools();
-            }
-            catch { }
-            try
-            {
-                codemirrow?.GetBrowser().CloseBrowser(true);
-                debuggerBrower?.GetBrowser().CloseBrowser(true);
-            }
-            catch { }
+            //try
+            //{
+            //    codemirrow?.CloseDevTools();
+            //    debuggerBrower?.CloseDevTools();
+            //}
+            //catch { }
+            //try
+            //{
+            //    codemirrow?.GetBrowser().CloseBrowser(true);
+            //    debuggerBrower?.GetBrowser().CloseBrowser(true);
+            //}
+            //catch { }
 
-            try
-            {
-                codemirrow?.Dispose();
-                debuggerBrower?.Dispose();
-            }
-            catch { }
+            //try
+            //{
+            //    codemirrow?.Dispose();
+            //    debuggerBrower?.Dispose();
+            //}
+            //catch { }
         }
     }
 }

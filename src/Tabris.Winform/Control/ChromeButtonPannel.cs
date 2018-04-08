@@ -1,5 +1,4 @@
-﻿using CefSharp;
-using CefSharp.WinForms;
+﻿using DSkin.DirectUI;
 using System;
 
 namespace Tabris.Winform.Control
@@ -7,9 +6,9 @@ namespace Tabris.Winform.Control
     public class ChromeButtonPannel : DSkin.Controls.DSkinPanel
     {
         private DSkin.Controls.DSkinButton btnExcutor = new DSkin.Controls.DSkinButton();
-        private readonly ChromiumWebBrowser _brower;
+        private readonly DuiMiniBlink _brower;
 
-        public ChromeButtonPannel(ChromiumWebBrowser brower)
+        public ChromeButtonPannel(DuiMiniBlink brower)
         {
             _brower = brower;
             init();

@@ -1,5 +1,4 @@
-﻿using CefSharp;
-using CefSharp.WinForms;
+﻿using DSkin.DirectUI;
 using JavaScript.Manager.Extensions;
 using System;
 using System.Collections.Generic;
@@ -12,33 +11,33 @@ using System.Windows.Forms;
 
 namespace Tabris.Winform.Control
 {
-    public class CookieVisitor : CefSharp.ICookieVisitor
-    {
-        public event Action<CefSharp.Cookie> SendCookie;
-        public bool Visit(CefSharp.Cookie cookie, int count, int total, ref bool deleteCookie)
-        {
-            deleteCookie = false;
-            if (SendCookie != null)
-            {
-                SendCookie(cookie);
-            }
+    //public class CookieVisitor : CefSharp.ICookieVisitor
+    //{
+    //    public event Action<CefSharp.Cookie> SendCookie;
+    //    public bool Visit(CefSharp.Cookie cookie, int count, int total, ref bool deleteCookie)
+    //    {
+    //        deleteCookie = false;
+    //        if (SendCookie != null)
+    //        {
+    //            SendCookie(cookie);
+    //        }
 
-            return true;
-        }
+    //        return true;
+    //    }
 
-        public void Dispose()
-        {
-        }
-    }
+    //    public void Dispose()
+    //    {
+    //    }
+    //}
 
-   
+
     public class ChromeViewExecutor
     {
-        private ChromiumWebBrowser browser;
+        private DuiMiniBlink browser;
         private CookieContainer initCookieContainer = new CookieContainer();
         private string cookies = string.Empty;
 
-        public Action<ChromiumWebBrowser, Action> AddChrome { get; set; }
+        public Action<DuiMiniBlink, Action> AddChrome { get; set; }
         public Action Closeing { get; set; }
 
         private Dictionary<string, List<dynamic>> _listeners = new Dictionary<string, List<dynamic>>();
@@ -56,16 +55,25 @@ namespace Tabris.Winform.Control
             {
                 this.@on("ready", param);
             }
-            browser = new ChromiumWebBrowser(url)
+            browser = new DuiMiniBlink()
             {
+                Url = url,
                 Dock = DockStyle.Fill,
                 BackColor = System.Drawing.Color.White,
             };
-            browser.FrameLoadEnd += OnFrameLoadEnd;
+            browser.DocumentReady += BrowserOnDocumentReady;
 
             AddChrome(browser, close);
         }
 
+        private void BrowserOnDocumentReady(object sender, DuiMiniBlink.DocumentReadyEventArgs documentReadyEventArgs)
+        {
+            //var cookieManager = CefSharp.Cef.GetGlobalCookieManager();
+            //CookieVisitor visitor = new CookieVisitor();
+            //visitor.SendCookie += visitor_SendCookie;
+            //cookieManager.VisitAllCookies(visitor);
+            OnReady();
+        }
 
 
         public string getInitCookieString()
@@ -73,25 +81,15 @@ namespace Tabris.Winform.Control
             return cookies;
         }
 
-        public async Task<string> execJs(string js)
+        public string execJs(string js)
         {
             try
             {
                 if (browser == null) return string.Empty;
-                var task = await browser.GetMainFrame().EvaluateScriptAsync(js, null);
-                if (task.Success)
-                {
-                    if (task.Result != null)
-                    {
-                        return task.Result.ToString();
-                    }
-                    else
-                    {
-                        return "null";
-                    }
-                }
-
-                return task.Message;
+               
+                var task = browser.InvokeJS(js);
+                
+                return task.ToString();
             }
             catch (Exception)
             {
@@ -112,12 +110,12 @@ namespace Tabris.Winform.Control
             }
         }
 
-        public async Task<string> getDomHtml()
+        public string getDomHtml()
         {
             try
             {
                 if (browser == null) return string.Empty;
-                var result = await browser.GetSourceAsync();
+                var result = browser.HTML;
                 return result;
             }
             catch (Exception)
@@ -180,46 +178,46 @@ namespace Tabris.Winform.Control
         public void closebrowser()
         {
 
-            try
-            {
-                browser?.CloseDevTools();
-            }
-            catch { }
-            try
-            {
-                browser?.GetBrowser().CloseBrowser(true);
-            }
-            catch { }
+            //try
+            //{
+            //    browser?.CloseDevTools();
+            //}
+            //catch { }
+            //try
+            //{
+            //    browser?.GetBrowser().CloseBrowser(true);
+            //}
+            //catch { }
 
-            try
-            {
-                browser?.Dispose();
-            }
-            catch { }
+            //try
+            //{
+            //    browser?.Dispose();
+            //}
+            //catch { }
 
         }
 
 
-        private void OnFrameLoadEnd(object sender, FrameLoadEndEventArgs e)
-        {
-            var cookieManager = CefSharp.Cef.GetGlobalCookieManager();
-            CookieVisitor visitor = new CookieVisitor();
-            visitor.SendCookie += visitor_SendCookie;
-            cookieManager.VisitAllCookies(visitor);
-            OnReady();
-        }
-        private void visitor_SendCookie(CefSharp.Cookie obj)
-        {
-            try
-            {
-                initCookieContainer.Add(new System.Net.Cookie(obj.Name, obj.Value) { Domain = obj.Domain });
-                cookies += obj.Domain.TrimStart('.') + "^" + obj.Name + "^" + obj.Value + "$";
-            }
-            catch (Exception)
-            {
+        //private void OnFrameLoadEnd(object sender, FrameLoadEndEventArgs e)
+        //{
+        //    var cookieManager = CefSharp.Cef.GetGlobalCookieManager();
+        //    CookieVisitor visitor = new CookieVisitor();
+        //    visitor.SendCookie += visitor_SendCookie;
+        //    cookieManager.VisitAllCookies(visitor);
+        //    OnReady();
+        //}
+        //private void visitor_SendCookie(CefSharp.Cookie obj)
+        //{
+        //    try
+        //    {
+        //        initCookieContainer.Add(new System.Net.Cookie(obj.Name, obj.Value) { Domain = obj.Domain });
+        //        cookies += obj.Domain.TrimStart('.') + "^" + obj.Name + "^" + obj.Value + "$";
+        //    }
+        //    catch (Exception)
+        //    {
 
-            }
-        }
+        //    }
+        //}
         private CookieContainer CopyContainer(CookieContainer container)
         {
             using (MemoryStream stream = new MemoryStream())

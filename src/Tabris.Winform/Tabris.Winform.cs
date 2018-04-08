@@ -1,5 +1,4 @@
-﻿using CefSharp.WinForms;
-using DSkin.Common;
+﻿using DSkin.Common;
 using DSkin.DirectUI;
 using System;
 using System.Diagnostics;
@@ -76,7 +75,7 @@ namespace Tabris.Winform
             SetItemSize();
         }
 
-        public void addPanel(ChromiumWebBrowser chrome,Action OnClosing)
+        public void addPanel(DuiMiniBlink chrome,Action OnClosing)
         {
             this.BeginInvoke(new EventHandler(delegate
             {
@@ -108,7 +107,9 @@ namespace Tabris.Winform
                 dSkinTabControl1.TabPages.Add(page);
                 dSkinTabBar1.LayoutContent();
                 dSkinTabBar1.SetSelect(item);
-                page.Controls.Add(chrome);
+                DSkin.Controls.DSkinBaseControl db = new DSkin.Controls.DSkinBaseControl { Dock = DockStyle.Fill };
+                db.DUIControls.Add(chrome);
+                page.Controls.Add(db);
                 var buttonPanel = new ChromeButtonPannel(chrome);
                 this.dSkinPanel3.Controls.Add(buttonPanel);
                 this.dSkinPanel1.Controls.Add(logPannel);
@@ -146,22 +147,25 @@ namespace Tabris.Winform
             };
             dSkinTabBar1.Items.Insert(index, item);
             //item.SendToBack();
-            //DSkin.Controls.ControlHost db = new DSkin.Controls.ControlHost { Dock = DockStyle.Fill };
-            ChromiumWebBrowser brower = new ChromiumWebBrowser(tabrisUrl)
+            DSkin.Controls.DSkinBaseControl db = new DSkin.Controls.DSkinBaseControl { Dock = DockStyle.Fill };
+            var  brower = new DuiMiniBlink()
             {
+                Url = this.tabrisUrl,
                 Dock = DockStyle.Fill,
                 BackColor = System.Drawing.Color.White,
                 Visible = false
             };
-            var DebuggerBrower = new ChromiumWebBrowser()
+            var DebuggerBrower = new DuiMiniBlink()
             {
                 Dock = DockStyle.Fill,
                 BackColor = System.Drawing.Color.White,
                 Visible = true
             };
+            db.DUIControls.Add(brower);
+            db.DUIControls.Add(DebuggerBrower);
             //db.Controls.Add(brower);
-          
-            
+
+
             LogPannel logPannel = new LogPannel();
             ButtonPannel buttonPannel = new ButtonPannel(brower,DebuggerBrower,this.DebuggerPort, logPannel.Log, logPannel.LogClear, addPanel)
             {
@@ -194,8 +198,7 @@ namespace Tabris.Winform
             dSkinTabBar1.LayoutContent();
             dSkinTabBar1.SetSelect(item);
 
-            page.Controls.Add(DebuggerBrower);
-            page.Controls.Add(brower);
+            page.Controls.Add(db);
 
             this.dSkinPanel3.Controls.Add(buttonPannel);
             this.dSkinPanel1.Controls.Add(logPannel);
