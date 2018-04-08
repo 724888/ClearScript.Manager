@@ -118,6 +118,17 @@ namespace Tabris.Winform
                 chrome.Tag = item;
                 DSkin.Controls.DSkinBaseControl db = new DSkin.Controls.DSkinBaseControl { Dock = DockStyle.Fill };
                 db.DUIControls.Add(chrome);
+                var loading = new DuiPictureBox
+                {
+                    Image = Properties.Resources.Loading2,
+                    Anchor = System.Windows.Forms.AnchorStyles.Top
+                };
+                db.DUIControls.Add(loading);
+                chrome.DocumentReady += (sender, args) =>
+                {
+                    loading.Visible = false;
+                    loading.Dispose();
+                };
                 page.Controls.Add(db);
                 var buttonPanel = new ChromeButtonPannel(chrome);
                 buttonPanel.Tag = this.dSkinPanel3;
@@ -234,8 +245,17 @@ namespace Tabris.Winform
             };
             brower.Tag = item;
             db.DUIControls.Add(brower);
-            //db.Controls.Add(brower);
-
+            var loading = new DuiPictureBox
+            {
+                Image = Properties.Resources.Loading2,
+                Anchor = System.Windows.Forms.AnchorStyles.Top
+            };
+            db.DUIControls.Add(loading);
+            brower.DocumentReady += (o, args) =>
+            {
+                loading.Visible = false;
+                loading.Dispose();
+            };
 
             LogPannel logPannel = new LogPannel();
             ButtonPannel buttonPannel = new ButtonPannel(brower,this.DebuggerPort, logPannel.Log, logPannel.LogClear, addPanel, addDebugPanel, ShowDebugView)

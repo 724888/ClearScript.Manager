@@ -66,6 +66,7 @@ namespace Tabris.Winform.Control
             init();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TabrisWinform));
             this.codemirrow = brower;
+          
             debuggerPort = DebuggerPort;
             //this.codemirrow.AllowDrop = true;
             //this.codemirrow.MenuHandler = new JSFunc(this);
@@ -106,7 +107,6 @@ namespace Tabris.Winform.Control
 
             addDebugChrome = AddDebugChrome;
             setTabrisTabItem = SetTabrisTabItem;
-            
             //debuggerUrl =string.Format(
             //        "chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=127.0.0.1:{0}/{1}",
             //        _setting.V8DebugPort, TargetId);

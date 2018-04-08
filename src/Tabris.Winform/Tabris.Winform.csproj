@@ -155,6 +155,7 @@
     <Content Include="Lib\v8-x64.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\5-121204193955-50.gif" />
     <Content Include="Resources\bt.png" />
     <Content Include="Resources\ChromeAdd.png" />
     <Content Include="Resources\ChromeAddHover.png" />
@@ -171,6 +172,7 @@
     <Content Include="Resources\ChromeSelect.png" />
     <None Include="Release\Tabris v1.0.zip" />
     <None Include="Resources\JSS.png" />
+    <None Include="Resources\Facebook-1s-200px.gif" />
     <Content Include="tabris\resources\codemirror-extension\addon\util\formatting.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
