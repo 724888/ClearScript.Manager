@@ -146,11 +146,30 @@ namespace Tabris.Winform.Control
                         if (item == null) continue;
                         if (item.Tag == null) continue;
                         var container = item.Tag as TabrisControlContainer;
-                        if (container == null) continue;
+                        if (container == null)
+                        {
+                            var cc = item.Tag as ViewControlContainer;
+                            if (cc != null && cc.IsDebug)
+                            {
+                                if (i == currentIndex)
+                                {
+                                    if (cc.ButtonPannel != null && cc.ButtonPannel.Tag != null)
+                                    {
+                                        ((DSkinPanel) cc.ButtonPannel.Tag).Hide();
+                                    }
+                                }
+                            }
+
+                            continue;
+                        }
                         if (i == currentIndex)
                         {
                             container.ButtonPannel?.Show();
                             container.LogPannel?.Show();
+                            if (container.ButtonPannel!=null && container.ButtonPannel.Tag != null)
+                            {
+                                ((DSkinPanel)container.ButtonPannel.Tag).Show();
+                            }
                         }
                         else
                         {

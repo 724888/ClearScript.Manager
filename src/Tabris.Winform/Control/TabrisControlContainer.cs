@@ -44,6 +44,7 @@ namespace Tabris.Winform.Control
 
         public LogPannel LogPannel { get; set; }
         public Action OnClosing { get; set; }
+        public bool IsDebug { get; set; }
 
         public void Dispose()
         {

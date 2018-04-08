@@ -167,6 +167,7 @@ namespace Tabris.Winform.Control
                 Dock = DockStyle.Fill,
                 BackColor = System.Drawing.Color.White,
             };
+            //debugbrowser.GlobalObject = this;
             debugbrowser.DocumentReady += (sender, args) => { action(); };
             addDebugChrome(debugbrowser, () =>
             {

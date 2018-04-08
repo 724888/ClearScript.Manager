@@ -120,6 +120,8 @@ namespace Tabris.Winform
                 db.DUIControls.Add(chrome);
                 page.Controls.Add(db);
                 var buttonPanel = new ChromeButtonPannel(chrome);
+                buttonPanel.Tag = this.dSkinPanel3;
+                
                 this.dSkinPanel3.Controls.Add(buttonPanel);
                 this.dSkinPanel1.Controls.Add(logPannel);
                 item.Tag = new ViewControlContainer
@@ -140,9 +142,10 @@ namespace Tabris.Winform
                         }
                     },
                     ButtonPannel = buttonPanel,
-                    LogPannel = logPannel
+                    LogPannel = logPannel,
+                    IsDebug = true
                 };
-
+                this.dSkinPanel3.Hide();
             }));
 
         }
@@ -183,6 +186,7 @@ namespace Tabris.Winform
                 db.DUIControls.Add(chrome);
                 page.Controls.Add(db);
                 var buttonPanel = new ChromeButtonPannel(chrome);
+                buttonPanel.Tag = this.dSkinPanel3;
                 this.dSkinPanel3.Controls.Add(buttonPanel);
                 this.dSkinPanel1.Controls.Add(logPannel);
                 item.Tag = new ViewControlContainer
@@ -266,7 +270,7 @@ namespace Tabris.Winform
             dSkinTabBar1.SetSelect(item);
 
             page.Controls.Add(db);
-
+            buttonPannel.Tag = this.dSkinPanel3;
             this.dSkinPanel3.Controls.Add(buttonPannel);
             this.dSkinPanel1.Controls.Add(logPannel);
             item.Tag = new TabrisControlContainer
