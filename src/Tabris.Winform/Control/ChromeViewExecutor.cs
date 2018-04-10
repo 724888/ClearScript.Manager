@@ -87,9 +87,9 @@ namespace Tabris.Winform.Control
             {
                 if (browser == null) return string.Empty;
                
-                var task = browser.InvokeJS(js);
-                
-                return task.ToString();
+                var task = string.Empty;
+                browser.Invoke(() => { task = browser.InvokeJS(js).ToString(); });
+                return task;
             }
             catch (Exception)
             {
@@ -115,8 +115,9 @@ namespace Tabris.Winform.Control
             try
             {
                 if (browser == null) return string.Empty;
-                var result = browser.HTML;
-                return result;
+                var re = string.Empty;
+                browser.Invoke(() => { re = browser.HTML; });
+                return re;
             }
             catch (Exception)
             {

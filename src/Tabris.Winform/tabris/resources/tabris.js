@@ -309,11 +309,11 @@
                             "!doc": "get the first initialized CookieContainer"
                         },
                         "execJs": {
-                            "!type": "fn(js: string) -> +AwaitString",
+                            "!type": "fn(js: string) -> string",
                             "!doc": "Execute js in the webview"
                         },
                         "getDomHtml": {
-                            "!type": "fn() -> +AwaitString",
+                            "!type": "fn() -> string",
                             "!doc": "get all domString of the current webview"
                         }
                     }
